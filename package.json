@@ -1,0 +1,24 @@
+{
+    "author": "michelyjiang@hotmail.com",
+    "dependencies": {},
+    "keywords": [],
+    "name": "timmah",
+    "pebble": {
+        "capabilities": [
+            ""
+        ],
+        "displayName": "Timmah",
+        "enableMultiJS": true,
+        "messageKeys": [],
+        "projectType": "native",
+        "resources": {
+            "media": []
+        },
+        "sdkVersion": "3",
+        "uuid": "28055462-ea12-41c0-b0b0-28771b69f9f0",
+        "watchapp": {
+            "watchface": false
+        }
+    },
+    "version": "1.0.0"
+}
