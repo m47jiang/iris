@@ -15,12 +15,33 @@ static int16_t spaceThresholdCounter = 0;
 
 static int16_t gracePeriodCounter = 0;
 
+static int16_t backSpaceThresholdCounter = 0;
+static int16_t lastY = 0;
+static int16_t lastY2 = 0;
+static const int16_t backspaceYThreshold = 300;
+
 static bool fourthValue() {
   if(impactCounter > 0) {
     return --impactCounter == 0;
   } else {
     return false;
   }
+}
+
+static void resetAll() {
+  //
+  //resets all the variables
+  //
+  
+  letterBits = 0;    
+  spaceThresholdCounter = 0;
+  backSpaceThresholdCounter = 0;
+  lastY = 0;
+  lastY2 = 0;
+  gracePeriodCounter = 6;
+  lastMeasurement = -900;
+  secondLastMeasurement = -900;
+  impactCounter = 0;
 }
 
 static void convertToLetter() {
@@ -187,20 +208,45 @@ static void accel_data_handler(AccelData *data, uint32_t num_samples) {
   else {
     if(y < -1100) {
       // Space detected!
-      letterBits = 0;
       strcat(word, " ");
       strcpy(displayString, word);      
       text_layer_set_text(s_text_layer, displayString);
-      spaceThresholdCounter = 0;
-      gracePeriodCounter = 6;
-      lastMeasurement = -900;
-      secondLastMeasurement = -900;
-      impactCounter = 0;
+      resetAll();
     }
     --spaceThresholdCounter;
   }
   
-    //APP_LOG(APP_LOG_LEVEL_INFO, "t: %llu, x: %d, y: %d, z: %d", timestamp, x, y, z);
+  //
+  //Detecting backspace
+  //
+  if(backSpaceThresholdCounter <= 0) {
+    if(y > 1500) {
+      backSpaceThresholdCounter = 4;
+    }
+  }
+  else if(backSpaceThresholdCounter <= 3 && backSpaceThresholdCounter > 0) {
+    if((lastY2 > lastY && y > lastY) 
+       && y > backspaceYThreshold 
+       && lastY > backspaceYThreshold 
+       &&lastY2 > backspaceYThreshold) {
+      // Backspace detected!
+      //APP_LOG(APP_LOG_LEVEL_INFO, "t: %llu: x: %d: y: %d: z: %d", timestamp, x, y, z);
+      if(strlen(word) > 0) {
+        word[strlen(word)-1] = '\0';
+        strcpy(displayString, word);
+        text_layer_set_text(s_text_layer, displayString);
+      }
+      resetAll();
+    }
+    --backSpaceThresholdCounter;
+  } else {
+    --backSpaceThresholdCounter;
+  }
+
+    APP_LOG(APP_LOG_LEVEL_INFO, "t: %llu: x: %d: y: %d: z: %d", timestamp, x, y, z);
+  
+  lastY2 = lastY;
+  lastY = y;
 }
 static void init(void) {
 	// Create a window and get information about the window
